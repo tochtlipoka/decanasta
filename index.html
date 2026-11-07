@@ -87,6 +87,7 @@
         {"@type": "Question", "name": "¿Con cuánta anticipación debo pedir?", "acceptedAnswer": {"@type": "Answer", "text": "Al menos 48 horas antes. Para pedidos de más de 500 tacos, de preferencia una semana."}},
         {"@type": "Question", "name": "¿Cómo llegan los tacos?", "acceptedAnswer": {"@type": "Answer", "text": "En canasta tradicional, envueltos para conservar el calor, así se mantienen calientitos y sudaditos durante el evento."}},
         {"@type": "Question", "name": "¿Cómo se paga?", "acceptedAnswer": {"@type": "Answer", "text": "Apartas con el 50% de anticipo por transferencia y liquidas el resto el día de la entrega."}},
+        {"@type": "Question", "name": "¿Cuánto cuesta el envío?", "acceptedAnswer": {"@type": "Answer", "text": "La entrega es gratis en la colonia Del Valle. Fuera de ella, el envío se cobra según la tarifa de Uber al momento del pedido, y te lo confirmamos antes de cobrar."}},
         {"@type": "Question", "name": "¿Tienen descuentos?", "acceptedAnswer": {"@type": "Answer", "text": "Sí. En tu segundo pedido te damos 10% de descuento. Además, entre más tacos pidas, menor es el precio por taco."}},
         {"@type": "Question", "name": "¿Dan factura?", "acceptedAnswer": {"@type": "Answer", "text": "Sí, sin costo adicional. Todos nuestros precios ya incluyen IVA."}}
       ]
@@ -323,6 +324,9 @@
   input[type=number],input[type=date],input[type=time],input[type=text]{width:100%;padding:13px 14px;border:2px solid var(--cal-gris);border-radius:12px;font:inherit;background:var(--cal);color:var(--piedra);transition:border-color .2s}
   input:focus{outline:none;border-color:var(--naranja)}
   .row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .aguas-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .aguas-grid label{display:block;font-weight:600;font-size:.92rem;margin-bottom:6px}
+  
   @media(max-width:520px){.row{grid-template-columns:1fr}}
   .checks{display:flex;flex-wrap:wrap;gap:10px}
   .checks label{cursor:pointer}
@@ -482,7 +486,7 @@
     <div class="wrap">
       <div class="caja rv" style="--d:.2s">
         <div class="item"><span class="ico"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span><div><strong>Todo incluido</strong><p>Salsas, chiles, cebollitas y desechables</p></div></div>
-        <div class="item"><span class="ico"><svg viewBox="0 0 24 24"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg></span><div><strong>Entrega a tu evento</strong><p>A la hora acordada, en CDMX</p></div></div>
+        <div class="item"><span class="ico"><svg viewBox="0 0 24 24"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg></span><div><strong>Entrega gratis en la Del Valle</strong><p>Resto de CDMX a tarifa de Uber</p></div></div>
         <div class="item"><span class="ico"><svg viewBox="0 0 24 24"><path d="M7 3h10v18l-3-2-2 2-2-2-3 2zM10 8h4M10 12h4"/></svg></span><div><strong>Factura sin costo</strong><p>Precios con IVA incluido</p></div></div>
       </div>
     </div>
@@ -512,9 +516,9 @@
     <p class="lead rv" style="--d:.2s">Los de siempre, hechos todos los días. Combina los que quieras en tu pedido.</p>
     <div class="grid g4">
       <article class="sabor s1 rv zoom" style="--d:.05s"><div class="plato"><svg><use href="#taco"/></svg></div><h3>Chicharrón</h3><p>Chicharrón prensado en salsa, el favorito de la canasta.</p></article>
-      <article class="sabor s2 rv zoom" style="--d:.15s"><div class="plato"><svg><use href="#taco"/></svg></div><h3>Papa</h3><p>Puré de papa sazonado, suavecito y rendidor.</p></article>
-      <article class="sabor s3 rv zoom" style="--d:.25s"><div class="plato"><svg><use href="#taco"/></svg></div><h3>Frijol</h3><p>Frijol refrito de olla, el que nunca falla.</p></article>
-      <article class="sabor s4 rv zoom" style="--d:.35s"><div class="plato"><svg><use href="#taco"/></svg></div><h3>Adobo</h3><p>Carne en adobo con chile, el más picosito.</p></article>
+      <article class="sabor s2 rv zoom" style="--d:.15s"><div class="plato"><svg><use href="#taco"/></svg></div><h3>Papa</h3><p>Papa con el sazón de la casa.</p></article>
+      <article class="sabor s3 rv zoom" style="--d:.25s"><div class="plato"><svg><use href="#taco"/></svg></div><h3>Frijol</h3><p>Frijol negro refrito, el que nunca falla.</p></article>
+      <article class="sabor s4 rv zoom" style="--d:.35s"><div class="plato"><svg><use href="#taco"/></svg></div><h3>Adobo</h3><p>Papa adobada, la que sabe a mole.</p></article>
     </div>
   </div>
 </section>
@@ -555,11 +559,12 @@
       <h3>Agrega aguas frescas</h3>
       <p>Hechas el mismo día, el complemento perfecto del taco de canasta.</p>
       <div class="chips">
+        <span class="chip" style="background:var(--cal-gris);color:var(--piedra)">Horchata</span>
         <span class="chip" style="background:var(--barro)">Jamaica</span>
-        <span class="chip" style="background:var(--cal);color:var(--piedra)">Horchata</span>
+        <span class="chip" style="background:#7A4A22">Tamarindo</span>
       </div>
       <div class="precio">$30 <small>por litro</small></div>
-      <img src="img/g-aguas1.jpg" alt="Aguas frescas de jamaica y horchata en botellas de litro" width="1100" height="821" loading="lazy">
+      <img src="img/g-aguas1.jpg" alt="Aguas frescas de horchata, jamaica y tamarindo en botellas de litro" width="1100" height="821" loading="lazy">
     </div>
   </div>
 </section>
@@ -630,10 +635,14 @@
           </div>
           <p class="error" id="err-sabor">Elige al menos un sabor.</p>
         </fieldset>
-        <div class="row">
-          <div><label class="t" for="jamaica">Agua de jamaica (litros)</label><input type="number" id="jamaica" value="0" min="0" inputmode="numeric"></div>
-          <div><label class="t" for="horchata">Agua de horchata (litros)</label><input type="number" id="horchata" value="0" min="0" inputmode="numeric"></div>
-        </div>
+        <fieldset style="border:0">
+          <legend class="t">Aguas frescas, $30 el litro (litros de cada una)</legend>
+          <div class="aguas-grid">
+            <div><label for="agua-horchata">Horchata</label><input type="number" id="agua-horchata" value="0" min="0" inputmode="numeric"></div>
+            <div><label for="agua-jamaica">Jamaica</label><input type="number" id="agua-jamaica" value="0" min="0" inputmode="numeric"></div>
+            <div><label for="agua-tamarindo">Tamarindo</label><input type="number" id="agua-tamarindo" value="0" min="0" inputmode="numeric"></div>
+          </div>
+        </fieldset>
         <div class="row">
           <div><label class="t" for="fecha">Fecha del evento</label><input type="date" id="fecha"></div>
           <div><label class="t" for="hora">Hora de entrega</label><input type="time" id="hora"></div>
@@ -641,6 +650,7 @@
         <div>
           <label class="t" for="lugar">Lugar de entrega (colonia y alcaldía)</label>
           <input type="text" id="lugar" placeholder="Ej. Del Valle, Benito Juárez">
+          <p class="hint">Entrega gratis en la Del Valle. Fuera de ella, el envío se cobra a tarifa de Uber.</p>
         </div>
         <label class="switch"><input type="checkbox" id="segundo"> Ya les he pedido antes (10% de descuento)</label>
         <label class="switch"><input type="checkbox" id="factura"> Requiero factura (sin costo adicional)</label>
@@ -651,6 +661,7 @@
         <dl>
           <dt id="r-tacos-l">100 tacos</dt><dd id="r-tacos">$1,200</dd>
           <dt id="r-agua-l">Aguas frescas</dt><dd id="r-agua">$0</dd>
+          <dt>Envío</dt><dd id="r-envio">Gratis en la Del Valle</dd>
           <dt id="r-desc-l" hidden>Descuento 2º pedido (10%)</dt><dd id="r-desc" hidden>−$0</dd>
         </dl>
         <hr>
@@ -669,14 +680,15 @@
     <div class="rv izq">
       <span class="eyebrow">Zona de entrega</span>
       <h2>Tacos de canasta <span class="brocha">a domicilio</span></h2>
-      <p class="lead">Llevamos tacos de canasta para eventos a toda la Ciudad de México. Atendemos fiestas, oficinas y escuelas en estas alcaldías, y si estás en otra zona, con gusto cotizamos el envío.</p>
-      <div class="zona">
+      <p class="lead"><strong>Entrega gratis en la Del Valle.</strong> También llevamos tu pedido a otras colonias de la Ciudad de México; fuera de la Del Valle, el envío se cobra según la tarifa de Uber al momento del pedido.</p>
+      <p class="hint" style="margin-top:18px;font-weight:600">Entregamos con frecuencia en estas alcaldías:</p>
+      <div class="zona" style="margin-top:10px">
         <span>Benito Juárez</span><span>Coyoacán</span><span>Cuauhtémoc</span><span>Miguel Hidalgo</span><span>Álvaro Obregón</span><span>Iztacalco</span>
       </div>
     </div>
     <div class="mapa rv der" style="--d:.15s">
-      <h3>¿Tu evento es fuera de la zona?</h3>
-      <p>Escríbenos y te cotizamos el envío. Para pedidos grandes, llegamos más lejos.</p>
+      <h3>¿Tu evento es fuera de la Del Valle?</h3>
+      <p>Escríbenos tu dirección y te decimos el costo del envío con la tarifa de Uber del momento, antes de confirmar tu pedido.</p>
       <p style="margin-top:20px"><a class="btn dark js-wa-link" href="#">Preguntar por WhatsApp</a></p>
       <svg class="pin" viewBox="0 0 24 24" fill="#FFFDF9" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>
     </div>
@@ -696,6 +708,7 @@
       <details class="rv" style="--d:.1s"><summary>¿Con cuánta anticipación debo pedir?</summary><p>Al menos 48 horas antes. Para pedidos de más de 500 tacos, de preferencia una semana.</p></details>
       <details class="rv" style="--d:.15s"><summary>¿Cómo llegan los tacos?</summary><p>En canasta tradicional, envueltos para conservar el calor, así se mantienen calientitos y sudaditos durante el evento.</p></details>
       <details class="rv" style="--d:.2s"><summary>¿Cómo se paga?</summary><p>Apartas con el 50% de anticipo por transferencia y liquidas el resto el día de la entrega.</p></details>
+      <details class="rv" style="--d:.2s"><summary>¿Cuánto cuesta el envío?</summary><p>La entrega es gratis en la colonia Del Valle. Fuera de ella, el envío se cobra según la tarifa de Uber al momento del pedido, y te lo confirmamos antes de cobrar.</p></details>
       <details class="rv" style="--d:.25s"><summary>¿Tienen descuentos?</summary><p>Sí. En tu segundo pedido te damos 10% de descuento. Además, entre más tacos pidas, menor es el precio por taco: $12 desde 100, $11.50 desde 200, $11 desde 300 y $10 desde 500.</p></details>
       <details class="rv" style="--d:.3s"><summary>¿Dan factura?</summary><p>Sí, sin costo adicional. Todos nuestros precios ya incluyen IVA.</p></details>
     </div>
@@ -800,12 +813,20 @@ $("fecha").min = min.toISOString().slice(0, 10);
 
 const redondear10 = n => Math.ceil(n / 10) * 10;
 const precioPorTaco = n => CONFIG.escalas.find(e => n >= e.desde).precio;
+const AGUAS = [{id: "horchata", n: "horchata"}, {id: "jamaica", n: "jamaica"}, {id: "tamarindo", n: "tamarindo"}];
+const normal = s => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+function envio() {
+  const l = normal($("lugar").value.trim());
+  if (!l) return {txt: "Gratis en la Del Valle", msg: "Gratis si es en la Del Valle", gratis: true};
+  if (l.includes("del valle")) return {txt: "Gratis", msg: "Gratis (la Del Valle)", gratis: true};
+  return {txt: "Por cotizar (tarifa Uber)", msg: "Por cotizar según tarifa de Uber", gratis: false};
+}
 const leer = id => Math.max(0, parseInt($(id).value, 10) || 0);
 let totalAnterior = "";
 
 function calcular() {
   const tacos = Math.max(CONFIG.minimoTacos, leer("tacos"));
-  const litros = leer("jamaica") + leer("horchata");
+  const litros = AGUAS.reduce((s, a) => s + leer("agua-" + a.id), 0);
   const precio = precioPorTaco(tacos);
   const subTacos = tacos * precio;
   const subAgua = litros * CONFIG.precioAguaLitro;
@@ -818,6 +839,8 @@ function calcular() {
   $("r-tacos-l").textContent = `${tacos} tacos × ${mxn(precio)}`;
   $("r-desc-l").hidden = $("r-desc").hidden = !segundo;
   $("r-desc").textContent = "−" + mxn(descuento);
+  const env = envio();
+  $("r-envio").textContent = env.txt;
   $("r-tacos").textContent = mxn(subTacos);
   $("r-agua-l").textContent = litros ? `${litros} L de agua` : "Aguas frescas";
   $("r-agua").textContent = mxn(subAgua);
@@ -825,7 +848,7 @@ function calcular() {
   if (txt !== totalAnterior && totalAnterior) { $("r-total").classList.add("pulso"); setTimeout(() => $("r-total").classList.remove("pulso"), 200); }
   $("r-total").textContent = totalAnterior = txt;
   $("r-iva").textContent = factura ? "IVA incluido · Factura sin costo" : "IVA incluido";
-  return {tacos, litros, subtotal, total, factura, segundo, descuento};
+  return {tacos, litros, subtotal, total, factura, segundo, descuento, env};
 }
 
 $("personas").addEventListener("input", () => {
@@ -841,7 +864,7 @@ document.querySelectorAll("[data-step]").forEach(b => b.addEventListener("click"
   calcular();
 }));
 $("tacos").addEventListener("change", () => { $("tacos").value = Math.max(CONFIG.minimoTacos, redondear10(leer("tacos"))); calcular(); });
-["tacos", "jamaica", "horchata", "factura", "segundo"].forEach(id => $(id).addEventListener("input", calcular));
+["tacos", "lugar", "factura", "segundo", ...AGUAS.map(a => "agua-" + a.id)].forEach(id => $(id).addEventListener("input", calcular));
 document.querySelectorAll("[data-tacos]").forEach(b => b.addEventListener("click", () => { $("tacos").value = b.dataset.tacos; calcular(); }));
 
 $("form").addEventListener("submit", e => {
@@ -850,19 +873,20 @@ $("form").addEventListener("submit", e => {
   $("err-sabor").style.display = sabores.length ? "none" : "block";
   if (!sabores.length) return;
   const r = calcular();
-  const j = leer("jamaica"), h = leer("horchata");
+  const aguas = AGUAS.filter(a => leer("agua-" + a.id)).map(a => `${leer("agua-" + a.id)} L ${a.n}`);
   const fecha = $("fecha").value ? new Date($("fecha").value + "T12:00").toLocaleDateString("es-MX", {weekday: "long", day: "numeric", month: "long"}) : "Por definir";
   const lineas = [
     "Hola, quiero hacer un pedido de De Canasta:", "",
     `• Tacos: ${r.tacos}`,
     `• Sabores: ${sabores.join(", ")}`,
-    (j || h) ? `• Aguas: ${[j && j + " L jamaica", h && h + " L horchata"].filter(Boolean).join(", ")}` : null,
+    aguas.length ? `• Aguas: ${aguas.join(", ")}` : null,
     `• Fecha: ${fecha}`,
     `• Hora: ${$("hora").value || "Por definir"}`,
     `• Lugar: ${$("lugar").value.trim() || "Por definir"}`,
+    `• Envío: ${r.env.msg}`,
     `• Factura: ${r.factura ? "Sí" : "No"}`,
     r.segundo ? "• Ya les he pedido antes: aplico 10% de descuento" : null, "",
-    `Total estimado: ${mxn(r.total)} (IVA incluido)`
+    `Total estimado: ${mxn(r.total)} (IVA incluido${r.env.gratis ? "" : ", sin envío"})`
   ].filter(l => l !== null);
   window.open(waURL(lineas.join("\n")), "_blank", "noopener");
 });
