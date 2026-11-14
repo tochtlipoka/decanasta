@@ -466,7 +466,10 @@
     <form class="pedido" id="gen" novalidate>
       <div class="form-card">
         <div><label class="t" for="g-tel">WhatsApp del cliente <span class="opc">(opcional, para mandarle el link directo)</span></label><input type="tel" id="g-tel" placeholder="10 dígitos" inputmode="numeric"></div>
-        <div><label class="t" for="g-tacos">Número de tacos</label><input type="number" id="g-tacos" value="100" min="100" step="10" inputmode="numeric"></div>
+        <div class="row">
+          <div><label class="t" for="g-tacos">Número de tacos</label><input type="number" id="g-tacos" value="100" min="100" step="10" inputmode="numeric"></div>
+          <div><label class="t" for="g-canastas">Canastas <span class="opc">(máx. 500 tacos c/u)</span></label><input type="number" id="g-canastas" value="1" min="1" max="20" inputmode="numeric"><p class="hint" id="g-canastas-hint">Se calcula sola; puedes ajustarla.</p></div>
+        </div>
         <fieldset style="border:0"><legend class="t">Sabores</legend>
           <div class="checks" id="g-sabores">
             <label><input type="checkbox" value="Chicharrón" checked><span>Chicharrón</span></label>
@@ -481,7 +484,7 @@
             <div><label for="g-tamarindo">Tamarindo</label><input type="number" id="g-tamarindo" value="0" min="0"></div>
           </div></fieldset>
         <div class="row">
-          <div><label class="t" for="g-fecha">Fecha</label><input type="date" id="g-fecha"></div>
+          <div class="campo"><label class="t" for="g-fecha">Fecha</label><input type="date" id="g-fecha"><p class="error">La fecha ya pasó.</p></div>
           <div><label class="t" for="g-hora">Hora</label><input type="time" id="g-hora"></div>
         </div>
         <div class="row">
@@ -493,7 +496,9 @@
       </div>
       <aside class="resumen">
         <h3>Total</h3>
-        <dl><dt>Calculado</dt><dd id="g-calc">$0</dd></dl>
+        <dl><dt>Calculado</dt><dd id="g-calc">$0</dd>
+            <dt id="g-dep-l">Depósito (1 canasta)</dt><dd id="g-dep">$250</dd></dl>
+        <p style="font-size:.8rem;color:#a9a6a0;margin-top:6px">El depósito es reembolsable y va aparte del total.</p>
         <div style="margin-top:14px"><label class="t" for="g-total" style="color:#c9c6c0">Total acordado (puedes ajustarlo)</label><input type="number" id="g-total" step="0.01" style="margin-top:6px"></div>
         <button type="button" class="btn" id="g-crear" style="width:100%;margin-top:20px">Crear pedido y link</button>
         <p class="msg mal" id="g-msg" hidden></p>
@@ -519,6 +524,7 @@
             <option value="confirmado">Confirmados (por pagar)</option>
             <option value="pagado">Pagados (por entregar)</option>
             <option value="factura">Factura pendiente</option>
+            <option value="canastas">Canastas por regresar</option>
             <option value="entregado">Entregados</option>
             <option value="cancelado">Cancelados</option>
             <option value="todos">Todos</option>
@@ -542,6 +548,8 @@ const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const $ = id => document.getElementById(id);
 const mxn = n => "$" + Number(n).toLocaleString("es-MX", {maximumFractionDigits: 2, minimumFractionDigits: n % 1 ? 2 : 0});
 const waURL = (msg, tel) => `https://wa.me/${tel || ""}${msg ? "?text=" + encodeURIComponent(msg) : ""}`;
+const MAX_POR_CANASTA = 500, DEPOSITO_CANASTA = 250;
+const hoyISO = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
 const AGUAS = [{id: "horchata", n: "horchata"}, {id: "jamaica", n: "jamaica"}, {id: "tamarindo", n: "tamarindo"}];
 const precioPorTaco = n => CONFIG.escalas.find(e => n >= e.desde).precio;
 const fechaLarga = f => f ? new Date(f + "T12:00").toLocaleDateString("es-MX", {weekday: "long", day: "numeric", month: "long"}) : "Por definir";
@@ -589,6 +597,9 @@ document.querySelectorAll("[data-tab]").forEach(b => b.addEventListener("click",
 // ===== Nuevo pedido =====
 let totalManual = false;
 $("g-total").addEventListener("input", () => totalManual = true);
+let canastasManual = false;
+$("g-canastas").addEventListener("input", () => canastasManual = true);
+$("g-fecha").min = hoyISO();
 const num = id => Math.max(0, parseFloat($(id).value) || 0);
 function armar() {
   const tacos = Math.max(CONFIG.minimoTacos, num("g-tacos"));
@@ -597,11 +608,18 @@ function armar() {
   const sub = tacos * precioPorTaco(tacos) + litros * CONFIG.precioAguaLitro;
   const descuento = $("g-segundo").checked ? Math.round(sub * CONFIG.descuentoSegundoPedido * 100) / 100 : 0;
   const envio = num("g-envio");
-  return { tacos, aguas, descuento, envio, calc: sub - descuento + envio };
+  const canastas = Math.min(20, Math.max(1, Math.round(num("g-canastas")) || 1));
+  return { tacos, aguas, descuento, envio, canastas, deposito: canastas * DEPOSITO_CANASTA, calc: sub - descuento + envio };
 }
 function calcular() {
+  if (!canastasManual) $("g-canastas").value = Math.max(1, Math.ceil(Math.max(CONFIG.minimoTacos, num("g-tacos")) / MAX_POR_CANASTA));
   const r = armar();
   $("g-calc").textContent = mxn(r.calc);
+  $("g-dep-l").textContent = `Depósito (${r.canastas} canasta${r.canastas > 1 ? "s" : ""})`;
+  $("g-dep").textContent = mxn(r.deposito);
+  const minimas = Math.ceil(r.tacos / MAX_POR_CANASTA);
+  $("g-canastas-hint").textContent = r.canastas < minimas ? `Ojo: ${r.tacos} tacos necesitan al menos ${minimas} canastas.` : "Se calcula sola; puedes ajustarla.";
+  $("g-canastas-hint").style.color = r.canastas < minimas ? "var(--barro)" : "";
   if (!totalManual) $("g-total").value = r.calc;
 }
 document.querySelectorAll("#gen input").forEach(el => el.addEventListener("input", calcular));
@@ -611,6 +629,9 @@ $("g-crear").addEventListener("click", async () => {
   const sabores = [...document.querySelectorAll("#g-sabores input:checked")].map(i => i.value);
   const tel = $("g-tel").value.replace(/\D/g, "").slice(-10);
   if (!sabores.length) return msg($("g-msg"), "Elige al menos un sabor.");
+  const fechaMal = $("g-fecha").value && $("g-fecha").value < hoyISO();
+  $("g-fecha").closest(".campo").classList.toggle("mal", !!fechaMal);
+  if (fechaMal) return msg($("g-msg"), "La fecha del evento ya pasó.");
   if (tel && tel.length !== 10) return msg($("g-msg"), "El WhatsApp del cliente debe tener 10 dígitos.");
   msg($("g-msg"), "");
   const btn = $("g-crear"); btn.disabled = true; btn.textContent = "Creando…";
@@ -619,18 +640,19 @@ $("g-crear").addEventListener("click", async () => {
     fecha: $("g-fecha").value || null, hora: $("g-hora").value || null,
     colonia_acordada: $("g-colonia").value.trim() || null,
     envio: r.envio, descuento: r.descuento, total: num("g-total"),
+    canastas: r.canastas, deposito_canasta: DEPOSITO_CANASTA,
     nota: $("g-nota").value.trim() || null, tel_cotizacion: tel || null
-  }).select("folio, token, total, tacos, fecha").single();
+  }).select("folio, token, total, tacos, fecha, canastas, deposito_canasta").single();
   btn.disabled = false; btn.textContent = "Crear pedido y link";
   if (error) return msg($("g-msg"), "No se pudo crear: " + error.message);
   const link = linkPedido(data.token);
   $("g-folio").textContent = data.folio;
   $("g-link").value = link; $("g-ver").href = link;
-  $("g-wa").href = waURL(`¡Listo! Tu pedido ${data.folio} de De Canasta está confirmado: ${data.tacos} tacos para el ${fechaLarga(data.fecha)}. Total: ${mxn(data.total)}.\n\nCompleta tus datos de entrega y facturación aquí:\n${link}`, tel ? "52" + tel : "");
+  $("g-wa").href = waURL(`¡Listo! Tu pedido ${data.folio} de De Canasta está confirmado: ${data.tacos} tacos para el ${fechaLarga(data.fecha)}. Total: ${mxn(data.total)} + depósito reembolsable de ${mxn(data.canastas * data.deposito_canasta)} (${data.canastas} canasta${data.canastas > 1 ? "s" : ""}).\n\nCompleta tus datos de entrega y facturación aquí:\n${link}`, tel ? "52" + tel : "");
   $("g-out").hidden = false; btn.hidden = true;
 });
 $("g-otro").addEventListener("click", () => {
-  $("gen").reset(); totalManual = false; $("g-out").hidden = true; $("g-crear").hidden = false; calcular();
+  $("gen").reset(); totalManual = false; canastasManual = false; $("g-out").hidden = true; $("g-crear").hidden = false; calcular();
   scrollTo({top: 0});
 });
 $("g-copiar").addEventListener("click", async () => {
@@ -639,6 +661,7 @@ $("g-copiar").addEventListener("click", async () => {
 });
 
 // ===== Lista de pedidos =====
+const DEPOSITO = [["pendiente", "Depósito pendiente"], ["cobrado", "Depósito cobrado"], ["devuelto", "Canastas devueltas"], ["retenido", "Depósito retenido"]];
 const ESTADOS = [["enviado", "Link enviado"], ["confirmado", "Confirmado (por pagar)"], ["pagado", "Pagado"], ["entregado", "Entregado"], ["cancelado", "Cancelado"]];
 const REGIMEN = {"601":"General de Ley PM","603":"PM sin fines de lucro","605":"Sueldos y salarios","606":"Arrendamiento","612":"Act. empresariales","616":"Sin obligaciones","621":"RIF","625":"Plataformas","626":"RESICO"};
 async function cargarPedidos() {
@@ -646,6 +669,7 @@ async function cargarPedidos() {
   let q = db.from("dc_pedidos").select("*, dc_datos_fiscales(*)").order("created_at", {ascending: false}).limit(100);
   if (f === "activos") q = q.in("estado", ["enviado", "confirmado", "pagado"]);
   else if (f === "factura") q = q.eq("factura_estado", "pendiente");
+  else if (f === "canastas") q = q.eq("deposito_estado", "cobrado");
   else if (f !== "todos") q = q.eq("estado", f);
   $("lista").innerHTML = '<p class="vacio">Cargando…</p>';
   const { data, error } = await q;
@@ -656,10 +680,12 @@ async function cargarPedidos() {
     const aguas = Object.entries(p.aguas || {}).filter(([, v]) => v).map(([k, v]) => `${v} L ${k}`).join(", ");
     return `<article class="ped" data-id="${p.id}">
       <div class="ped-top"><div><strong>${esc(p.folio)}</strong> <span class="chip ${p.estado}">${esc(ESTADOS.find(e => e[0] === p.estado)[1])}</span>
+        ${p.comprobante_path ? `<span class="chip pagado">Comprobante recibido</span>` : ""}
         ${p.requiere_factura ? `<span class="chip">${p.factura_estado === "enviada" ? "Factura enviada" : "Factura pendiente"}</span>` : ""}</div>
         <span class="monto">${mxn(p.total)}</span></div>
       <div class="ped-info">
         <span><b>${p.tacos} tacos</b> · ${esc((p.sabores || []).join(", "))}${aguas ? " · " + esc(aguas) : ""}</span>
+        <span>Canastas: <b>${p.canastas}</b> · depósito ${mxn(p.canastas * p.deposito_canasta)}</span>
         <span>Entrega: <b>${esc(fechaLarga(p.fecha))}${p.hora ? ", " + esc(p.hora.slice(0, 5)) : ""}</b></span>
         ${p.cliente_nombre ? `<span>Cliente: <b>${esc(p.cliente_nombre)}</b> · <a href="https://wa.me/52${esc(p.cliente_telefono)}" target="_blank" rel="noopener">${esc(p.cliente_telefono)}</a></span>` : `<span>Cliente: <b>aún no confirma</b></span>`}
         <span>Lugar: <b>${esc(p.entrega_calle ? p.entrega_calle + ", " + p.entrega_colonia : p.colonia_acordada || "—")}</b>${p.entrega_referencias ? " · " + esc(p.entrega_referencias) : ""}</span>
@@ -670,6 +696,8 @@ async function cargarPedidos() {
         <span>Régimen ${esc(fis.regimen_fiscal)} (${esc(REGIMEN[fis.regimen_fiscal] || "")}) · CP ${esc(fis.cp_fiscal)} · Uso ${esc(fis.uso_cfdi)}</span>
         <span>Enviar a: ${esc(fis.correo)}</span></div>` : ""}
       <div class="ped-acc">
+        <select class="js-deposito" aria-label="Estado del depósito">${DEPOSITO.map(([v, t]) => `<option value="${v}" ${v === p.deposito_estado ? "selected" : ""}>${t}</option>`).join("")}</select>
+        ${p.comprobante_path ? `<button type="button" class="btn sm js-comp" data-path="${esc(p.comprobante_path)}">Ver comprobante</button>` : ""}
         <select class="js-estado" aria-label="Estado del pedido">${ESTADOS.map(([v, t]) => `<option value="${v}" ${v === p.estado ? "selected" : ""}>${t}</option>`).join("")}</select>
         ${p.requiere_factura && p.factura_estado === "pendiente" ? `<button type="button" class="btn sm js-factura">Marcar factura enviada</button>` : ""}
         <button type="button" class="btn sm ghost js-link" data-token="${p.token}">Copiar link</button>
@@ -680,10 +708,14 @@ async function cargarPedidos() {
 $("f-estado").addEventListener("change", cargarPedidos);
 $("recargar").addEventListener("click", cargarPedidos);
 $("lista").addEventListener("change", async e => {
+  if (e.target.matches(".js-deposito")) {
+    const { error } = await db.from("dc_pedidos").update({ deposito_estado: e.target.value }).eq("id", e.target.closest(".ped").dataset.id);
+    return error ? alertaLista(error.message) : cargarPedidos();
+  }
   if (!e.target.matches(".js-estado")) return;
   const id = e.target.closest(".ped").dataset.id, estado = e.target.value;
   const cambios = { estado };
-  if (estado === "pagado") cambios.pagado_at = new Date().toISOString();
+  if (estado === "pagado") { cambios.pagado_at = new Date().toISOString(); if (e.target.closest(".ped").querySelector(".js-deposito").value === "pendiente") cambios.deposito_estado = "cobrado"; }
   if (estado === "entregado") cambios.entregado_at = new Date().toISOString();
   const { error } = await db.from("dc_pedidos").update(cambios).eq("id", id);
   if (error) alertaLista(error.message); else cargarPedidos();
@@ -693,6 +725,12 @@ $("lista").addEventListener("click", async e => {
   if (e.target.matches(".js-factura")) {
     const { error } = await db.from("dc_pedidos").update({ factura_estado: "enviada" }).eq("id", art.dataset.id);
     if (error) alertaLista(error.message); else cargarPedidos();
+  }
+  if (e.target.matches(".js-comp")) {
+    const ventana = window.open("", "_blank");
+    const { data, error } = await db.storage.from("dc-comprobantes").createSignedUrl(e.target.dataset.path, 300);
+    if (error || !data) { if (ventana) ventana.close(); return alertaLista(error ? error.message : "No se encontró el archivo"); }
+    if (ventana) ventana.location = data.signedUrl; else location.href = data.signedUrl;
   }
   if (e.target.matches(".js-link")) {
     try { await navigator.clipboard.writeText(linkPedido(e.target.dataset.token)); e.target.textContent = "¡Copiado!"; }

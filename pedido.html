@@ -383,6 +383,14 @@
   .conf-acc .btn{width:100%}
   .conf-nota{font-size:.82rem;color:var(--cantera);text-align:center}
   [hidden]{display:none!important}
+  .resumen .deposito{display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:.92rem;margin-top:14px;padding-top:12px;border-top:1px dashed #5a5b60}
+  .resumen .deposito dt{color:#c9c6c0}.resumen .deposito dd{text-align:right;font-weight:600}
+  .resumen .deposito .grande{color:var(--cal);font-weight:700;font-size:1.02rem}
+  .subir{margin-top:10px;display:grid;gap:10px}
+  .subir label.archivo{display:flex;align-items:center;gap:10px;border:2px dashed #F1DDC6;background:#FBF4EC;border-radius:14px;padding:14px 16px;cursor:pointer;font-weight:600;color:var(--piedra);font-size:.93rem}
+  .subir label.archivo:hover{border-color:var(--naranja)}
+  .subir input[type=file]{position:absolute;opacity:0;width:1px;height:1px}
+  .subir .ok{color:#2f5e1c;font-weight:700;font-size:.93rem}
   .cargando{opacity:.45;pointer-events:none;transition:opacity .2s}
   .cuenta strong{white-space:nowrap;grid-column:1/-1;font-size:1.02rem}
   .cuenta span{grid-column:1!important}
@@ -535,9 +543,13 @@
         <hr>
         <div class="total"><span>Total</span><strong id="a-total"></strong></div>
         <p class="iva" id="a-iva">IVA incluido</p>
+        <dl class="deposito">
+          <dt id="a-dep-l">Depósito reembolsable</dt><dd id="a-dep"></dd>
+          <dt class="grande">Total a transferir</dt><dd class="grande" id="a-transferir"></dd>
+        </dl>
         <button type="submit" class="btn" id="btn-enviar">Confirmar mi pedido →</button>
         <p class="error" id="err-envio" style="text-align:center;margin-top:10px;color:var(--mamey)">No pudimos registrar tu pedido. Intenta de nuevo o escríbenos por WhatsApp.</p>
-        <p class="aviso">¿Algo no coincide? Escríbenos antes de confirmar. El depósito de $250 por canasta es reembolsable al regresarla (máx. 7 días naturales). Al confirmar aceptas nuestro <a href="aviso-de-privacidad.html" style="color:var(--mamey)">aviso de privacidad</a>.</p>
+        <p class="aviso">¿Algo no coincide? Escríbenos antes de confirmar. El depósito por canasta se te devuelve al regresarla (máx. 7 días naturales). Al confirmar aceptas nuestro <a href="aviso-de-privacidad.html" style="color:var(--mamey)">aviso de privacidad</a>.</p>
       </aside>
     </form>
   </div>
@@ -563,17 +575,25 @@
     <div class="conf-body">
       <dl class="conf-res" id="c-res"></dl>
       <ol class="pasos-pago">
-        <li><div><b>Transfiere con tu folio como concepto</b><p>Por el total acordado.</p>
+        <li><div><b>Transfiere con tu folio como concepto</b><p id="c-monto-txt">Por el total acordado.</p>
           <div class="cuenta">
             <div><span>Banco</span><strong id="c-banco"></strong></div>
             <div><span>Beneficiario</span><strong id="c-benef"></strong></div>
             <div><span>CLABE</span><strong id="c-clabe"></strong><button type="button" class="copiar" data-copiar="c-clabe">Copiar</button></div>
             <div><span>Concepto</span><strong id="c-concepto"></strong><button type="button" class="copiar" data-copiar="c-concepto">Copiar</button></div>
           </div></div></li>
-        <li><div><b>Mándanos tu comprobante</b><p id="c-fact-txt">Con eso queda apartado tu pedido.</p></div></li>
+        <li><div><b>Súbenos tu comprobante</b><p id="c-fact-txt">Con eso queda apartado tu pedido.</p>
+          <div class="subir" id="subir">
+            <label class="archivo" for="c-archivo"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg><span id="c-archivo-txt">Elegir foto o PDF del comprobante</span></label>
+            <input type="file" id="c-archivo" accept="image/*,application/pdf">
+            <button type="button" class="btn" id="c-subir" disabled>Subir comprobante</button>
+            <p class="error" id="c-subir-err" style="margin:0"></p>
+          </div>
+          <p class="ok" id="c-subido" hidden>✓ Recibimos tu comprobante. Te avisamos por WhatsApp cuando lo validemos.</p>
+        </div></li>
       </ol>
       <div class="conf-acc">
-        <a class="btn" id="c-wa" href="#" target="_blank" rel="noopener"><svg width="20" height="20" fill="currentColor" aria-hidden="true"><use href="#wa"/></svg>Enviar mi comprobante por WhatsApp</a>
+        <a class="btn" id="c-wa" href="#" target="_blank" rel="noopener"><svg width="20" height="20" fill="currentColor" aria-hidden="true"><use href="#wa"/></svg>¿Dudas? Escríbenos por WhatsApp</a>
         <a class="btn ghost" href="index.html">Volver al inicio</a>
       </div>
       <p class="conf-nota">Guarda tu folio: lo usamos para rastrear tu pago, tu entrega y tu factura.</p>
@@ -626,6 +646,7 @@ function pintarAcordado() {
     ["Fecha", fechaLarga(A.fecha)],
     ["Hora", A.hora || "Por definir"],
     ["Zona", A.colonia || "Por definir"],
+    ["Canastas", `${A.canastas}`],
     ["Envío", A.envio ? mxn(A.envio) : "Gratis"],
     A.descuento ? ["Descuento", "−" + mxn(A.descuento)] : null,
     A.nota ? ["Nota", A.nota] : null
@@ -633,6 +654,9 @@ function pintarAcordado() {
   $("a-res").innerHTML = "";
   filas.forEach(([k, v]) => { const dt = document.createElement("dt"); dt.textContent = k; const dd = document.createElement("dd"); dd.textContent = v; $("a-res").append(dt, dd); });
   $("a-total").textContent = mxn(A.total);
+  $("a-dep-l").textContent = `Depósito reembolsable (${A.canastas} × ${mxn(A.deposito_canasta)})`;
+  $("a-dep").textContent = mxn(A.deposito);
+  $("a-transferir").textContent = mxn(A.total + A.deposito);
   if (A.colonia && !$("lugar").value) $("lugar").value = A.colonia;
 }
 async function cargar() {
@@ -642,7 +666,7 @@ async function cargar() {
   $("form").classList.remove("cargando");
   if (error) return mostrarInvalido("No pudimos cargar tu pedido", "Revisa tu conexión y vuelve a abrir el link. Si sigue igual, escríbenos.");
   if (!data) return mostrarInvalido();
-  A = { ...data, total: Number(data.total), envio: Number(data.envio), descuento: Number(data.descuento) };
+  A = { ...data, total: Number(data.total), envio: Number(data.envio), descuento: Number(data.descuento), deposito: Number(data.deposito || 0), deposito_canasta: Number(data.deposito_canasta || 0), canastas: data.canastas || 1 };
   pintarAcordado();
   if (A.estado === "pagado" || A.estado === "entregado") return mostrarInvalido(`Pedido ${A.folio}: ${A.estado === "pagado" ? "pago recibido" : "entregado"}`, "¡Gracias por tu pedido! Si necesitas algo, escríbenos por WhatsApp.");
   if (A.estado !== "enviado") abrirConf(null);   // ya confirmado: muestra de nuevo los datos de pago
@@ -719,14 +743,17 @@ function abrirConf(p) {
   ].filter(Boolean);
   $("c-res").innerHTML = "";
   filas.forEach(([k, v]) => { const dt = document.createElement("dt"); dt.textContent = k; const dd = document.createElement("dd"); dd.textContent = v; $("c-res").append(dt, dd); });
-  const dt = document.createElement("dt"); dt.className = "tot"; dt.textContent = "Total a transferir"; const dd = document.createElement("dd"); dd.textContent = mxn(A.total);
+  [["Pedido", mxn(A.total)], [`Depósito (${A.canastas} canasta${A.canastas > 1 ? "s" : ""}, reembolsable)`, mxn(A.deposito)]].forEach(([k, v]) => { const dt = document.createElement("dt"); dt.textContent = k; const dd = document.createElement("dd"); dd.textContent = v; $("c-res").append(dt, dd); });
+  const dt = document.createElement("dt"); dt.className = "tot"; dt.textContent = "Total a transferir"; const dd = document.createElement("dd"); dd.textContent = mxn(A.total + A.deposito);
   $("c-res").append(dt, dd);
+  $("c-monto-txt").textContent = `Por ${mxn(A.total + A.deposito)}: tu pedido más el depósito de las canastas.`;
+  $("subir").hidden = !!A.comprobante; $("c-subido").hidden = !A.comprobante;
   $("c-banco").textContent = CONFIG.pago.banco;
   $("c-benef").textContent = CONFIG.pago.beneficiario;
   $("c-clabe").textContent = CONFIG.pago.clabe.replace(/(\d{3})(\d{3})(\d{11})(\d)/, "$1 $2 $3 $4");
   $("c-concepto").textContent = A.folio;
   $("c-fact-txt").textContent = p && p.factura ? `Con eso queda apartado tu pedido. Tu factura llega a ${p.factura.correo} después de tu pago.` : "Con eso queda apartado tu pedido.";
-  $("c-wa").href = waURL(`Hola${p ? ", soy " + p.cliente.nombre : ""}. Ya transferí ${mxn(A.total)} del pedido ${A.folio} (${A.tacos} tacos para el ${fechaLarga(A.fecha)}). Les envío mi comprobante.`);
+  $("c-wa").href = waURL(`Hola${p ? ", soy " + p.cliente.nombre : ""}. Tengo una duda sobre mi pedido ${A.folio} (${A.tacos} tacos para el ${fechaLarga(A.fecha)}).`);
   $("conf").classList.add("abierto"); document.body.style.overflow = "hidden";
   $("conf").scrollTop = 0; $("conf-t").focus({preventScroll: true});
 }
@@ -735,6 +762,32 @@ document.querySelectorAll("[data-copiar]").forEach(b => b.addEventListener("clic
   try { await navigator.clipboard.writeText(txt); b.textContent = "¡Copiado!"; } catch { b.textContent = txt; }
   setTimeout(() => b.textContent = "Copiar", 1600);
 }));
+
+// ---- Subir comprobante ----
+$("c-archivo").addEventListener("change", () => {
+  const f = $("c-archivo").files[0];
+  $("c-subir-err").style.display = "none";
+  $("c-archivo-txt").textContent = f ? f.name : "Elegir foto o PDF del comprobante";
+  $("c-subir").disabled = !f;
+});
+$("c-subir").addEventListener("click", async () => {
+  const f = $("c-archivo").files[0]; if (!f) return;
+  const err = t => { $("c-subir-err").textContent = t; $("c-subir-err").style.display = "block"; };
+  if (f.size > 5 * 1024 * 1024) return err("El archivo pesa más de 5 MB. Intenta con una captura de pantalla.");
+  if (!/^image\/|^application\/pdf$/.test(f.type)) return err("Sube una foto o un PDF.");
+  const btn = $("c-subir"); btn.disabled = true; btn.textContent = "Subiendo…";
+  const ext = (f.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 5) || "jpg";
+  const ruta = `${TOKEN}/comprobante-${Date.now()}.${ext}`;
+  try {
+    const up = await db.storage.from("dc-comprobantes").upload(ruta, f, { contentType: f.type, upsert: false });
+    if (up.error) throw up.error;
+    const reg = await db.rpc("dc_registrar_comprobante", { p_token: TOKEN, p_path: ruta });
+    if (reg.error) throw reg.error;
+    A.comprobante = true; $("subir").hidden = true; $("c-subido").hidden = false;
+  } catch (e) {
+    err("No pudimos subir el archivo. Intenta de nuevo o mándalo por WhatsApp.");
+  } finally { btn.disabled = false; btn.textContent = "Subir comprobante"; }
+});
 
 $("form").addEventListener("submit", async e => {
   e.preventDefault();
